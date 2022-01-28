@@ -3,6 +3,7 @@
 # MAGIC # Goal
 # MAGIC 
 # MAGIC Demonstrate:
+# MAGIC - loading data
 # MAGIC - experiment metrics for model training
 # MAGIC - log hyperparameters and other metrics
 # MAGIC - deploy to model registry 
@@ -10,47 +11,52 @@
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 # MAGIC %md
-# MAGIC ## Import data
-# MAGIC   
-# MAGIC In this section, you download a dataset from the web and upload it to Databricks File System (DBFS).
+# MAGIC # Import data
+# MAGIC 
+# MAGIC There are three options for loading the data:
+# MAGIC 
+# MAGIC ## Uploading via File -> Upload Data
 # MAGIC 
 # MAGIC 1. Navigate to https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/ and download both `winequality-red.csv` and `winequality-white.csv` to your local machine.
 # MAGIC 
 # MAGIC 1. From this Databricks notebook, select *File* > *Upload Data*, and drag these files to the drag-and-drop target to upload them to the Databricks File System (DBFS). 
 # MAGIC 
-# MAGIC     **Note**: if you don't have the *File* > *Upload Data* option, you can load the dataset from the Databricks example datasets. Uncomment and run the last two lines in the following cell.
-# MAGIC 
 # MAGIC 1. Click *Next*. Some auto-generated code to load the data appears. Select *pandas*, and copy the example code. 
 # MAGIC 
-# MAGIC 1. Create a new cell, then paste in the sample code. It will look similar to the code shown in the following cell. Make these changes:
+# MAGIC 1. Create a new cell, then paste in the sample code. Make these changes:
 # MAGIC   - Pass `sep=';'` to `pd.read_csv`
 # MAGIC   - Change the variable names from `df1` and `df2` to `white_wine` and `red_wine`, as shown in the following cell.
+# MAGIC   
+# MAGIC ## Load from the sample datasets available on Databricks
+# MAGIC 
+# MAGIC These can be found at `dbfs/databricks-datasets` and the particular one we want is in `/wine-quality`
+# MAGIC 
+# MAGIC ## Link the Github repo and load from the data folder
+# MAGIC 
+# MAGIC This is assuming you've running this notebook in the context of the cloned repo https://github.com/pugillum/databricks-ml-demo
+# MAGIC 
+# MAGIC The files can be loaded from within the context of the folder structure containing this notebook:
+# MAGIC ```
+# MAGIC white_wine = pd.read_csv('../data/winequality-white.csv', sep=";")
+# MAGIC red_wine = pd.read_csv('../data/winequality-red.csv', sep=";")
+# MAGIC ```
 
 # COMMAND ----------
-
-# If you have the File > Upload Data menu option, follow the instructions in the previous cell to upload the data from your local machine.
-# The generated code, including the required edits described in the previous cell, is shown here for reference.
 
 import pandas as pd
 
-# In the following lines, replace <username> with your username.
-white_wine = pd.read_csv("/dbfs/FileStore/shared_uploads/<username>/winequality_white.csv", sep=';')
-red_wine = pd.read_csv("/dbfs/FileStore/shared_uploads/<username>/winequality_red.csv", sep=';')
-
-# If you do not have the File > Upload Data menu option, uncomment and run these lines to load the dataset.
-
-#white_wine = pd.read_csv("/dbfs/databricks-datasets/wine-quality/winequality-white.csv", sep=";")
-#red_wine = pd.read_csv("/dbfs/databricks-datasets/wine-quality/winequality-red.csv", sep=";")
+white_wine = pd.read_csv("/dbfs/databricks-datasets/wine-quality/winequality-white.csv", sep=";")
+red_wine = pd.read_csv("/dbfs/databricks-datasets/wine-quality/winequality-red.csv", sep=";")
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC Merge the two DataFrames into a single dataset, with a new binary feature "is_red" that indicates whether the wine is red or white.
+# MAGIC %md # Generate feature set
+# MAGIC 
+# MAGIC - Merge the two DataFrames into a single dataset, with a new binary feature "is_red" that indicates whether the wine is red or white.
+# MAGIC - Rename columns to replace " " with "_"
+# MAGIC - Convert "quality" column to indicate either above or below '7'
+# MAGIC - drop missing values
 
 # COMMAND ----------
 
@@ -62,29 +68,20 @@ data = pd.concat([red_wine, white_wine], axis=0)
 # Remove spaces from column names
 data.rename(columns=lambda x: x.replace(' ', '_'), inplace=True)
 
+# set quality to to binary value indicating above or below "7"
+high_quality = (data.quality >= 7).astype(int)
+data.quality = high_quality
+
+data = data.dropna()
+
 # COMMAND ----------
 
 data.head()
 
 # COMMAND ----------
 
-high_quality = (data.quality >= 7).astype(int)
-data.quality = high_quality
-
-# COMMAND ----------
-
 # MAGIC %md
-# MAGIC ## Preprocess data
-# MAGIC Prior to training a model, check for missing values and split the data into training and validation sets.
-
-# COMMAND ----------
-
-data.isna().any()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC There are no missing values.
+# MAGIC ## Split the data into train and test sets.
 
 # COMMAND ----------
 
@@ -144,6 +141,7 @@ with mlflow.start_run(run_name='untuned_random_forest'):
   # Use the area under the ROC curve as a metric.
   mlflow.log_metric('auc', auc_score)
   wrappedModel = SklearnModelWrapper(model)
+  
   # Log the model with a signature that defines the schema of the model's inputs and outputs. 
   # When the model is deployed, this signature will be used to validate inputs.
   signature = infer_signature(X_train, wrappedModel.predict(None, X_train))
