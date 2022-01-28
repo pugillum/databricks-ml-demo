@@ -158,21 +158,6 @@ with mlflow.start_run(run_name='untuned_random_forest'):
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Examine the learned feature importances output by the model as a sanity-check.
-
-# COMMAND ----------
-
-feature_importances = pd.DataFrame(model.feature_importances_, index=X_train.columns.tolist(), columns=['importance'])
-feature_importances.sort_values('importance', ascending=False)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC As illustrated by the boxplots shown previously, both alcohol and density are important in predicting quality.
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC You logged the Area Under the ROC Curve (AUC) to MLflow. Click **Experiment** at the upper right to display the Experiment Runs sidebar. 
 # MAGIC 
 # MAGIC The model achieved an AUC of 0.89. 
@@ -190,6 +175,7 @@ feature_importances.sort_values('importance', ascending=False)
 
 # COMMAND ----------
 
+# retrieve the run ID based on the run name
 run_id = mlflow.search_runs(filter_string='tags.mlflow.runName = "untuned_random_forest"').iloc[0].run_id
 
 # COMMAND ----------
@@ -198,9 +184,6 @@ run_id = mlflow.search_runs(filter_string='tags.mlflow.runName = "untuned_random
 # the cause may be that a model already exists with the name "wine_quality". Try using a different name.
 model_name = "wine_quality"
 model_version = mlflow.register_model(f"runs:/{run_id}/random_forest_model", model_name)
-
-# Registering the model takes a few seconds, so add a small delay
-time.sleep(15)
 
 # COMMAND ----------
 
@@ -340,15 +323,12 @@ print(f'AUC of Best Run: {best_run["metrics.auc"]}')
 
 new_model_version = mlflow.register_model(f"runs:/{best_run.run_id}/model", model_name)
 
-# Registering the model takes a few seconds, so add a small delay
-time.sleep(15)
-
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC Click **Models** in the left sidebar to see that the `wine_quality` model now has two versions. 
 # MAGIC 
-# MAGIC The following code promotes the new version to production.
+# MAGIC The following code promotes the new version to production and archives the old one
 
 # COMMAND ----------
 
@@ -446,7 +426,7 @@ display(new_data)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC d
+# MAGIC 
 # MAGIC You need a Databricks token to issue requests to your model endpoint. You can generate a token from the User Settings page (click Settings in the left sidebar). Copy the token into the next cell.
 
 # COMMAND ----------
