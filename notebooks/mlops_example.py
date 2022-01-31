@@ -14,7 +14,7 @@
 # MAGIC %md
 # MAGIC # Import data
 # MAGIC 
-# MAGIC There are three options for loading the data:
+# MAGIC There are two options for loading the data:
 # MAGIC 
 # MAGIC ## Uploading via File -> Upload Data
 # MAGIC 
@@ -31,16 +31,6 @@
 # MAGIC ## Load from the sample datasets available on Databricks
 # MAGIC 
 # MAGIC These can be found at `dbfs/databricks-datasets` and the particular one we want is in `/wine-quality`
-# MAGIC 
-# MAGIC ## Link the Github repo and load from the data folder
-# MAGIC 
-# MAGIC This is assuming you've running this notebook in the context of the cloned repo https://github.com/pugillum/databricks-ml-demo
-# MAGIC 
-# MAGIC The files can be loaded from within the context of the folder structure containing this notebook:
-# MAGIC ```
-# MAGIC white_wine = pd.read_csv('../data/winequality-white.csv', sep=";")
-# MAGIC red_wine = pd.read_csv('../data/winequality-red.csv', sep=";")
-# MAGIC ```
 
 # COMMAND ----------
 
