@@ -1,4 +1,4 @@
-# Machine Learning in GCP
+# Machine Learning in Databricks
 
 For this part of the Training Taster we will be going through an end-to-end machine learning example to showcase the use of a few features for machine learning projects, namely:
 - Repositories
