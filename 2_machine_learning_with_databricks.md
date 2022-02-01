@@ -49,7 +49,7 @@ The ML Clusters are provisioned with additional libraries for machine learning n
 
    <img src="images/2_machine_learning_with_databricks/image-20220131184154639.png" alt="image-20220131184154639" style="zoom:50%;" />
 
-   4. Select "Create Cluster"
+4. Select "Create Cluster"
 
 # An end-to-end ML example
 
