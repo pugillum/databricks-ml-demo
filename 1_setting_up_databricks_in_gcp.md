@@ -168,3 +168,32 @@ dbutils.fs.unmount(f"/mnt/{mount_name}")
 
 
 There are other options for connecting to Google Cloud Storage as documented [here](https://docs.gcp.databricks.com/data/data-sources/google/gcs.html#google-cloud-storage)
+
+# Create and use Delta Tables
+
+As a bonus, here are the steps to convert a CSV file into a Delta Table:
+
+```python
+from pyspark.sql import functions as F
+
+# Load the red wine CSV, inferring the schema
+wine_red = spark.read.option("Header",True).option("delimiter",";") \
+.option("inferSchema",True) \
+.csv('/databricks-datasets/wine-quality/winequality-red.csv')
+
+# Adjust the column headers
+wine_red = wine_red.select([F.col(col).alias(col.replace(' ', '_')) for col in wine_red.columns])
+
+table_path = "dbfs:/shared/wine_data"
+table_name = "wine_red"
+database_name = "wine"
+
+# Output to delta
+wine_red.write.mode("overwrite").save(table_path)
+
+# Create a database
+spark.sql(f"CREATE DATABASE IF NOT EXISTS {database_name}")
+
+# Create a table
+spark.sql(f"CREATE TABLE IF NOT EXISTS {database_name}.{table_name} USING DELTA LOCATION '{table_path}'")
+```
